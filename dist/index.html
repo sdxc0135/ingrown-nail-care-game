@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101a34">
+  <title>발톱 구조대 · 내성발톱 케어 게임</title>
+  <style>
+    :root {
+      --ink: #17213b;
+      --muted: #78829c;
+      --navy: #101a34;
+      --navy-2: #1a2850;
+      --cream: #fff9ee;
+      --paper: rgba(255,255,255,.92);
+      --coral: #ff786e;
+      --pink: #ffb3ae;
+      --mint: #76ddc1;
+      --yellow: #ffd667;
+      --line: rgba(23,33,59,.1);
+      --shadow: 0 22px 60px rgba(13, 24, 57, .22);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 12%, rgba(255, 145, 137, .42), transparent 23rem),
+        radial-gradient(circle at 95% 5%, rgba(118, 221, 193, .25), transparent 25rem),
+        var(--navy);
+      font-family: Inter, Pretendard, "Apple SD Gothic Neo", system-ui, sans-serif;
+      letter-spacing: -.02em;
+    }
+    button { font: inherit; }
+    .page { min-height: 100vh; padding: 22px clamp(18px, 4vw, 58px) 44px; }
+    .topbar { max-width: 1240px; margin: 0 auto 20px; display:flex; align-items:center; justify-content:space-between; gap: 16px; color: white; }
+    .brand { display:flex; align-items:center; gap: 11px; }
+    .brand-mark { width: 39px; height:39px; border-radius: 13px; background: var(--coral); display:grid; place-items:center; box-shadow: 0 9px 24px rgba(255,120,110,.35); font-size: 21px; transform: rotate(-7deg); }
+    .brand-copy { line-height:1.05; }
+    .brand-copy strong { display:block; font-size:18px; }
+    .brand-copy span { display:block; opacity:.58; font-size:11px; margin-top: 4px; letter-spacing:.06em; text-transform:uppercase; }
+    .top-actions { display:flex; align-items:center; gap: 10px; }
+    .pill { display:flex; align-items:center; gap:7px; border:1px solid rgba(255,255,255,.17); background: rgba(255,255,255,.09); padding:9px 13px; border-radius: 99px; font-size:12px; }
+    .pill b { color: var(--yellow); font-size:14px; }
+    .icon-button { border:1px solid rgba(255,255,255,.17); background:rgba(255,255,255,.09); color:#fff; width:38px; height:38px; border-radius:12px; cursor:pointer; }
+    .shell { max-width:1240px; margin:0 auto; display:grid; grid-template-columns: minmax(230px, .78fr) minmax(430px, 1.55fr) minmax(230px, .78fr); gap: 16px; align-items:stretch; }
+    .card { background: var(--paper); border:1px solid rgba(255,255,255,.62); border-radius: 25px; box-shadow:var(--shadow); }
+    .case-card { padding: 23px; display:flex; flex-direction:column; min-height: 670px; }
+    .eyebrow { font-size:11px; text-transform:uppercase; letter-spacing:.11em; color:var(--muted); font-weight:800; }
+    h1,h2,h3,p { margin:0; }
+    .case-card h1 { font-size: 31px; line-height:1.04; margin-top:9px; letter-spacing:-.055em; }
+    .case-card .intro { color:var(--muted); font-size:13px; line-height:1.6; margin-top:14px; }
+    .patient { margin-top:22px; background:#f6f3ee; border-radius:21px; padding:14px; display:flex; align-items:center; gap:12px; }
+    .patient-avatar { width:55px; height:55px; border-radius:18px; display:grid; place-items:center; background:linear-gradient(145deg,#f7b5b0,#ffcda0); font-size:28px; }
+    .patient strong { font-size:14px; }
+    .patient p { font-size:12px; color:var(--muted); margin-top:3px; }
+    .objective { border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin-top:18px; padding:16px 0; }
+    .objective-head { display:flex; justify-content:space-between; align-items:center; }
+    .objective-head strong { font-size:13px; }
+    .mood { color:#e39c21; font-size:14px; }
+    .objective p { color:var(--muted); font-size:12px; line-height:1.55; margin-top:7px; }
+    .tip { margin-top:auto; background: #fff2dd; border-radius:17px; padding:14px; display:flex; gap:10px; color:#866335; font-size:12px; line-height:1.5; }
+    .tip span { font-size:19px; }
+    .play-card { padding: 15px; min-height:670px; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+    .play-head { display:flex; align-items:center; justify-content:space-between; padding:6px 7px 12px; }
+    .play-head h2 { font-size:17px; letter-spacing:-.04em; }
+    .stage { font-size:11px; color:var(--muted); background:#f3f2f0; border-radius:99px; padding:7px 10px; }
+    .stage b { color:var(--ink); }
+    .treatment { flex:1; min-height:407px; border-radius:22px; background:
+      radial-gradient(circle at 18% 20%, rgba(118,221,193,.28), transparent 24%),
+      linear-gradient(150deg, #183b53 0%, #0c5963 100%); display:grid; place-items:center; position:relative; overflow:hidden; }
+    .treatment:before { content:""; position:absolute; inset: 13px; border:1px dashed rgba(23,33,59,.13); border-radius:15px; pointer-events:none; }
+    .treatment-note { position:absolute; top:24px; left:27px; right:27px; display:flex; align-items:center; justify-content:space-between; z-index:2; }
+    .helper { color:var(--muted); font-size:11px; background:rgba(255,255,255,.75); border-radius:99px; padding:8px 11px; }
+    .target-label { color:var(--coral); font-size:11px; font-weight:800; background:#fff3ee; padding:8px 10px; border-radius:99px; transition:.25s; }
+    .target-label.done { color:#1d8066; background:#e2faf3; }
+    .foot-wrap { position:relative; width:min(92%, 520px); aspect-ratio: 1; transform:none; filter: drop-shadow(18px 18px 16px rgba(3,17,28,.32)); border-radius:20px; overflow:hidden; background: url('assets/ingrown-toe-macro.jpg') center / cover no-repeat; border:1px solid rgba(255,255,255,.23); }
+    .foot { display:none; position:absolute; inset:12% 10% 0 7%; background:linear-gradient(150deg,#f8cdb6,#edaa91); border-radius: 48% 48% 44% 35% / 47% 47% 55% 53%; transform:rotate(8deg); }
+    .foot:before { content:""; position:absolute; width:49%; height:64%; background:rgba(255,231,213,.56); border-radius:50%; top:22%; left:21%; transform:rotate(10deg); }
+    .toe { display:none; position:absolute; z-index:2; background:linear-gradient(145deg,#f7c3aa,#eda58b); border-radius:48% 48% 42% 42%; transform:rotate(8deg); box-shadow:inset -6px -8px 8px rgba(191,108,83,.12); }
+    .toe:after { content:""; position:absolute; left:18%; right:17%; top:8%; height:30%; background:#fff3ec; border-radius:48%; box-shadow:inset 0 -3px 4px rgba(222,145,121,.19); }
+    .toe-1 { width:42%; height:22%; left:2%; top:0; transform:rotate(-17deg); }
+    .toe-2 { width:33%; height:20%; left:45%; top:2%; transform:rotate(4deg); }
+    .toe-3 { width:28%; height:18%; left:70%; top:11%; transform:rotate(14deg); }
+    .toe-4 { width:24%; height:16%; left:84%; top:26%; transform:rotate(19deg); }
+    .toe-5 { width:20%; height:15%; left:91%; top:43%; transform:rotate(24deg); }
+    .nail-curl { position:absolute; z-index:5; width:19%; height:19%; min-width:74px; min-height:74px; top:36%; left:51%; border: 3px solid rgba(255,255,255,.95); border-radius: 50%; transform:none; transition:.45s; box-shadow:0 0 0 7px rgba(255,120,110,.22), 0 0 24px rgba(255,255,255,.35); }
+    .nail-curl:after { content:""; position:absolute; width:11px; height:11px; background:#ff786e; border-radius:50%; right:-4px; bottom:4px; box-shadow:0 0 0 6px rgba(255,120,110,.18); }
+    .foot-wrap.cleaned .nail-curl { opacity:.12; transform:translate(18px,8px) scale(.55); }
+    .bandage { position:absolute; z-index:6; width:124px; height:38px; top:38%; left:43%; border-radius:99px; background:#f5d795; transform:rotate(-8deg); opacity:0; transition:.35s; box-shadow: 0 3px 5px rgba(3,17,28,.28); }
+    .bandage:before,.bandage:after { content:""; position:absolute; background:#dfbd72; width:4px; height:4px; border-radius:50%; top:7px; left:36px; box-shadow:13px 0 #dfbd72, 0 8px #dfbd72, 13px 8px #dfbd72; }
+    .foot-wrap.bandaged .bandage { opacity:1; }
+    .sparkle { position:absolute; opacity:0; font-size:22px; z-index:8; }
+    .foot-wrap.healed .sparkle { opacity:1; animation:float 1.8s infinite ease-in-out; }
+    .s1 { top:16%; left:-7%; } .s2 { top:4%; right:-10%; animation-delay:.4s!important; } .s3 { bottom:22%; left:0; animation-delay:.8s!important; }
+    @keyframes float { 0%,100%{transform:translateY(3px) rotate(-5deg); opacity:.3} 50%{transform:translateY(-8px) rotate(8deg); opacity:1} }
+    .feedback { position:absolute; left:50%; bottom:23px; transform:translateX(-50%); background:var(--navy); color:white; border-radius:99px; padding:10px 14px; font-size:12px; opacity:0; transition:.2s; white-space:nowrap; pointer-events:none; }
+    .feedback.show { opacity:1; bottom:29px; }
+    .step-row { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; padding:13px 3px 5px; }
+    .step { display:flex; align-items:center; gap:7px; color:#a0a5b3; font-size:10px; white-space:nowrap; }
+    .step i { width:24px; height:24px; display:grid; place-items:center; border-radius:50%; background:#f2f1ef; font-style:normal; font-size:12px; }
+    .step.active { color:var(--ink); font-weight:800; } .step.active i { background:#ffe0d3; color:var(--coral); }
+    .step.complete { color:#178b70; } .step.complete i { background:#d7f7ed; }
+    .tools-card { padding:23px; min-height:670px; display:flex; flex-direction:column; }
+    .tools-card h2 { font-size:18px; margin-top:7px; }
+    .tools-card > p { color:var(--muted); font-size:12px; line-height:1.5; margin-top:7px; }
+    .tool-list { display:grid; gap:9px; margin-top:18px; }
+    .tool { border:1px solid var(--line); background:#fff; padding:12px; border-radius:17px; cursor:pointer; display:flex; align-items:center; gap:11px; text-align:left; color:var(--ink); transition:.2s; }
+    .tool:hover { transform:translateY(-2px); border-color:#f1b4a5; box-shadow:0 7px 15px rgba(23,33,59,.08); }
+    .tool.selected { border:2px solid var(--coral); background:#fff5f1; padding:11px; box-shadow:0 7px 17px rgba(255,120,110,.16); }
+    .tool.locked { opacity:.45; cursor:not-allowed; }
+    .tool-icon { width:37px; height:37px; border-radius:13px; display:grid; place-items:center; background:#f5f1eb; font-size:20px; flex:none; }
+    .tool.selected .tool-icon { background:#ffe0d7; }
+    .tool-copy { min-width:0; } .tool-copy strong { display:block; font-size:12px; } .tool-copy span { display:block; color:var(--muted); font-size:10px; margin-top:3px; }
+    .tool-key { margin-left:auto; color:#a7aaba; font-size:10px; font-weight:700; }
+    .score-box { margin-top:auto; background:var(--navy); color:white; padding:15px; border-radius:18px; position:relative; overflow:hidden; }
+    .score-box:after { content:"✦"; position:absolute; right:11px; top:4px; color:var(--yellow); font-size:28px; opacity:.5; }
+    .score-box .eyebrow { color:rgba(255,255,255,.52); } .score { font-size:28px; font-weight:850; margin-top:5px; letter-spacing:-.06em; }
+    .score-box small { color:rgba(255,255,255,.56); font-size:10px; }
+    .primary { width:100%; border:0; border-radius:15px; padding:14px 16px; margin-top:12px; background:var(--coral); color:white; font-weight:800; cursor:pointer; box-shadow:0 9px 15px rgba(255,120,110,.27); transition:.2s; }
+    .primary:hover { transform:translateY(-2px); filter:saturate(1.08); }
+    .primary:disabled { background:#cbd0da; box-shadow:none; cursor:not-allowed; transform:none; }
+    .footer-note { max-width:1240px; margin:12px auto 0; color:rgba(255,255,255,.45); font-size:11px; text-align:right; }
+    .modal { position:fixed; inset:0; background:rgba(8,14,31,.64); backdrop-filter: blur(7px); display:grid; place-items:center; padding:20px; z-index:20; opacity:0; pointer-events:none; transition:.2s; }
+    .modal.open { opacity:1; pointer-events:auto; }
+    .modal-box { width:min(430px,100%); background:var(--cream); padding:28px; border-radius:25px; text-align:center; box-shadow:0 30px 70px rgba(0,0,0,.3); transform:translateY(12px); transition:.2s; }
+    .modal.open .modal-box { transform:translateY(0); }
+    .modal-emoji { font-size:46px; margin-bottom:10px; } .modal-box h2 { font-size:25px; letter-spacing:-.06em; } .modal-box p { margin-top:10px; color:var(--muted); font-size:13px; line-height:1.6; }
+    .modal-box .primary { margin-top:20px; }
+    @media (max-width: 980px) { .shell { grid-template-columns: 1fr 1.2fr; } .case-card { min-height:unset; } .tools-card { grid-column:1 / -1; min-height:unset; } .tool-list { grid-template-columns:repeat(4,1fr); } .score-box { margin-top:18px; } }
+    @media (max-width: 670px) { .page { padding:14px 12px 30px; } .topbar { margin-bottom:13px; } .pill { display:none; } .shell { display:flex; flex-direction:column; } .case-card { order:2; } .play-card { order:1; min-height:650px; } .tools-card { order:3; } .case-card,.tools-card { min-height:unset; } .tool-list { grid-template-columns:repeat(2,1fr); } .footer-note { text-align:center; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark">🩹</div><div class="brand-copy"><strong>발톱 구조대</strong><span>tiny care, big relief</span></div></div>
+      <div class="top-actions"><div class="pill">오늘의 케어 코인 <b id="coinCount">248</b> 🪙</div><button class="icon-button" id="soundButton" aria-label="소리 켜기/끄기">🔊</button></div>
+    </header>
+
+    <main class="shell">
+      <aside class="card case-card">
+        <div class="eyebrow">today's patient · 01</div>
+        <h1>발끝에도<br>마음이 있어요.</h1>
+        <p class="intro">조심조심 케어해서 오늘의 환자에게 가벼운 발걸음을 선물해 주세요.</p>
+        <div class="patient"><div class="patient-avatar">🐰</div><div><strong>토끼 씨</strong><p>산책을 좋아하는 토끼</p></div></div>
+        <div class="objective"><div class="objective-head"><strong>오늘의 미션</strong><span class="mood">♥ ♥ ♥</span></div><p>발톱 끝을 깨끗하게 정리하고<br>따뜻한 붕대까지 감아주세요.</p></div>
+        <div class="tip"><span>💡</span><div><strong>케어 팁</strong><br>도구를 고른 뒤, 발톱 끝에 있는 반짝이는 목표를 눌러보세요.</div></div>
+      </aside>
+
+      <section class="card play-card">
+        <div class="play-head"><h2>케어 룸 01 <span style="color:#ff786e">·</span> 말랑 발끝 클리닉</h2><div class="stage">남은 시간 <b id="timer">35</b>초</div></div>
+        <div class="treatment" id="treatment">
+          <div class="treatment-note"><span class="helper" id="helperText">진료 시작 버튼을 눌러주세요</span><span class="target-label" id="targetLabel">준비 중</span></div>
+          <div class="foot-wrap" id="footWrap">
+            <div class="foot"></div><div class="toe toe-1"></div><div class="toe toe-2"></div><div class="toe toe-3"></div><div class="toe toe-4"></div><div class="toe toe-5"></div>
+            <div class="nail-curl"></div><div class="bandage"></div>
+            <div class="sparkle s1">✦</div><div class="sparkle s2">✦</div><div class="sparkle s3">✦</div>
+          </div>
+          <div class="feedback" id="feedback">좋아요!</div>
+        </div>
+        <div class="step-row">
+          <div class="step active" data-step="0"><i>🫧</i><span>소독</span></div><div class="step" data-step="1"><i>✂️</i><span>정리</span></div><div class="step" data-step="2"><i>🧴</i><span>보호</span></div><div class="step" data-step="3"><i>🩹</i><span>마무리</span></div>
+        </div>
+      </section>
+
+      <aside class="card tools-card">
+        <div class="eyebrow">care tools</div><h2>도구를 골라요</h2><p>순서에 맞는 도구를 선택하면<br>케어 포인트를 얻을 수 있어요.</p>
+        <div class="tool-list">
+          <button class="tool" data-tool="sanitize"><div class="tool-icon">🫧</div><div class="tool-copy"><strong>클린 버블</strong><span>먼지와 긴장 닦기</span></div><span class="tool-key">1</span></button>
+          <button class="tool" data-tool="tweezers"><div class="tool-icon">✂️</div><div class="tool-copy"><strong>말랑 핀셋</strong><span>끝부분 살짝 집기</span></div><span class="tool-key">2</span></button>
+          <button class="tool" data-tool="ointment"><div class="tool-icon">🧴</div><div class="tool-copy"><strong>진정 크림</strong><span>발끝을 편안하게</span></div><span class="tool-key">3</span></button>
+          <button class="tool" data-tool="bandage"><div class="tool-icon">🩹</div><div class="tool-copy"><strong>포근 붕대</strong><span>오늘의 케어 완료</span></div><span class="tool-key">4</span></button>
+        </div>
+        <div class="score-box"><div class="eyebrow">care points</div><div class="score"><span id="score">000</span> pts</div><small>정확한 케어마다 +250</small></div>
+        <button class="primary" id="startButton">진료 시작하기</button>
+      </aside>
+    </main>
+    <div class="footer-note">가볍고 귀여운 게임 속 케어예요 · 실제 증상은 전문가와 상담하세요</div>
+  </div>
+
+  <div class="modal" id="resultModal"><div class="modal-box"><div class="modal-emoji" id="resultEmoji">🎉</div><h2 id="resultTitle">케어 완료!</h2><p id="resultCopy">토끼 씨의 발끝이 한결 편안해졌어요.<br>오늘의 케어 포인트를 확인해 보세요.</p><button class="primary" id="againButton">다시 케어하기</button></div></div>
+  <script>
+    (() => {
+      const steps = [
+        { tool:'sanitize', label:'소독할 곳', helper:'먼저 깨끗하게 닦아볼까요?', success:'뽀득! 준비 완료예요.' },
+        { tool:'tweezers', label:'끝부분 정리', helper:'반짝이는 끝을 살짝 눌러주세요.', success:'쏙! 깔끔하게 정리했어요.' },
+        { tool:'ointment', label:'진정 크림', helper:'이제 발끝에 크림을 발라요.', success:'사르르—편안해졌어요.' },
+        { tool:'bandage', label:'포근 붕대', helper:'마지막으로 포근하게 감싸주세요.', success:'완벽해요! 발끝이 웃고 있어요.' }
+      ];
+      const state = { step:0, score:0, coins:248, started:false, ended:false, time:35, timerId:null, selected:null, sound:true };
+      const $ = s => document.querySelector(s);
+      const tools = [...document.querySelectorAll('.tool')];
+      const stepEls = [...document.querySelectorAll('.step')];
+      const startButton = $('#startButton');
+      const treatment = $('#treatment');
+      const feedback = $('#feedback');
+      const footWrap = $('#footWrap');
+      const targetLabel = $('#targetLabel');
+      const helperText = $('#helperText');
+      const timer = $('#timer');
+      const score = $('#score');
+
+      function showFeedback(message, good=true) {
+        feedback.textContent = message;
+        feedback.style.background = good ? 'var(--navy)' : '#c25458';
+        feedback.classList.remove('show');
+        requestAnimationFrame(() => feedback.classList.add('show'));
+        clearTimeout(showFeedback.timeout);
+        showFeedback.timeout = setTimeout(() => feedback.classList.remove('show'), 1150);
+      }
+      function updateScore() { score.textContent = String(state.score).padStart(3,'0'); $('#coinCount').textContent = state.coins; }
+      function renderStep() {
+        const current = steps[state.step] || steps[steps.length - 1];
+        stepEls.forEach((el, i) => { el.classList.toggle('active', i===state.step); el.classList.toggle('complete', i<state.step); });
+        tools.forEach(t => t.classList.toggle('selected', t.dataset.tool === state.selected));
+        targetLabel.textContent = state.step === steps.length ? '케어 완료' : (state.started ? current.label : '준비 중');
+        targetLabel.classList.toggle('done', state.step===4);
+        helperText.textContent = state.step === steps.length ? '오늘도 한 건 해결!' : (state.started ? current.helper : '진료 시작 버튼을 눌러주세요');
+      }
+      function reset() {
+        clearInterval(state.timerId); state.step=0; state.score=0; state.started=false; state.ended=false; state.time=35; state.selected=null;
+        timer.textContent=state.time; startButton.textContent='진료 시작하기'; startButton.disabled=false; footWrap.className='foot-wrap'; renderStep(); updateScore();
+      }
+      function begin() {
+        state.started=true; state.ended=false; state.step=0; state.score=0; state.selected=null; state.time=35; startButton.textContent='케어 진행 중'; startButton.disabled=true; renderStep(); updateScore();
+        clearInterval(state.timerId); state.timerId = setInterval(() => { state.time--; timer.textContent=state.time; if(state.time<=0) finish(false); },1000);
+      }
+      function choose(tool) {
+        if (!state.started || state.ended) return;
+        state.selected = tool; renderStep();
+        const correct = steps[state.step].tool === tool;
+        showFeedback(correct ? '좋은 선택이에요!' : '이 순서의 도구는 아니에요', correct);
+      }
+      function interact() {
+        if (!state.started || state.ended) return;
+        const current = steps[state.step];
+        if (state.selected !== current.tool) { showFeedback('먼저 맞는 도구를 골라주세요', false); treatment.animate([{transform:'translateX(-3px)'},{transform:'translateX(3px)'},{transform:'translateX(0)'}],{duration:180}); return; }
+        state.score += 250; state.coins += 12; updateScore(); showFeedback(current.success);
+        if (state.step === 0) footWrap.classList.add('cleaned');
+        if (state.step === 2) footWrap.classList.add('healed');
+        if (state.step === 3) footWrap.classList.add('bandaged');
+        state.step++; state.selected=null; renderStep();
+        if (state.step === 4) setTimeout(() => finish(true), 600);
+      }
+      function finish(success) {
+        if (state.ended) return; state.ended=true; clearInterval(state.timerId); state.started=false; startButton.disabled=false; startButton.textContent='진료 시작하기';
+        if (success) { targetLabel.textContent='케어 완료'; targetLabel.classList.add('done'); helperText.textContent='오늘도 한 건 해결!'; }
+        $('#resultEmoji').textContent=success ? '🎉' : '⏰'; $('#resultTitle').textContent=success ? '케어 완료!' : '시간이 다 됐어요'; $('#resultCopy').innerHTML=success ? `토끼 씨의 발끝이 한결 편안해졌어요.<br><b>${state.score}점</b>을 획득했어요.` : '괜찮아요. 도구를 다시 챙겨서<br>천천히 케어해 볼까요?'; $('#resultModal').classList.add('open');
+      }
+      tools.forEach(t => t.addEventListener('click', () => choose(t.dataset.tool)));
+      treatment.addEventListener('click', interact);
+      startButton.addEventListener('click', begin);
+      $('#againButton').addEventListener('click', () => { $('#resultModal').classList.remove('open'); reset(); begin(); });
+      $('#soundButton').addEventListener('click', e => { state.sound=!state.sound; e.currentTarget.textContent=state.sound?'🔊':'🔇'; showFeedback(state.sound?'소리를 켰어요':'소리를 껐어요'); });
+      document.addEventListener('keydown', e => { const map={1:'sanitize',2:'tweezers',3:'ointment',4:'bandage'}; if(map[e.key]) choose(map[e.key]); if(e.key==='Enter' && !state.started && !state.ended) begin(); });
+      reset();
+    })();
+  </script>
+</body>
+</html>
+
