@@ -13,6 +13,7 @@ public class BootTest : MonoBehaviour
         }
 
         installed = true;
-        if (GetComponent<FootCareGameController>() == null) gameObject.AddComponent<FootCareGameController>();
+        if (GetComponent<ToeProcedureV01>() == null) gameObject.AddComponent<ToeProcedureV01>();
     }
 }
+
