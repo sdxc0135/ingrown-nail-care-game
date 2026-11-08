@@ -68,12 +68,20 @@
     .stage b { color:var(--ink); }
     .treatment { flex:1; min-height:407px; border-radius:22px; background:
       radial-gradient(circle at 18% 20%, rgba(118,221,193,.28), transparent 24%),
-      linear-gradient(150deg, #183b53 0%, #0c5963 100%); display:grid; place-items:center; position:relative; overflow:hidden; }
+      linear-gradient(150deg, #183b53 0%, #0c5963 100%); display:grid; place-items:center; position:relative; overflow:hidden; touch-action:none; user-select:none; }
     .treatment:before { content:""; position:absolute; inset: 13px; border:1px dashed rgba(23,33,59,.13); border-radius:15px; pointer-events:none; }
     .treatment-note { position:absolute; top:24px; left:27px; right:27px; display:flex; align-items:center; justify-content:space-between; z-index:2; }
     .helper { color:var(--muted); font-size:11px; background:rgba(255,255,255,.75); border-radius:99px; padding:8px 11px; }
     .target-label { color:var(--coral); font-size:11px; font-weight:800; background:#fff3ee; padding:8px 10px; border-radius:99px; transition:.25s; }
     .target-label.done { color:#1d8066; background:#e2faf3; }
+    .action-hud { position:absolute; z-index:4; left:24px; right:24px; bottom:18px; padding:11px 13px 12px; border-radius:15px; color:#fff; background:rgba(8,16,30,.68); border:1px solid rgba(255,255,255,.2); backdrop-filter:blur(8px); opacity:.55; transition:.2s; pointer-events:none; }
+    .action-hud.active { opacity:1; }
+    .action-line { display:flex; align-items:center; gap:8px; font-size:11px; }
+    .action-line > span:first-child { display:grid; place-items:center; width:23px; height:23px; border-radius:8px; background:rgba(255,255,255,.14); color:#ffd667; font-size:15px; }
+    .action-line b { margin-left:auto; color:#ffd667; font-size:11px; }
+    .progress-track { height:6px; margin-top:9px; overflow:hidden; border-radius:99px; background:rgba(255,255,255,.16); }
+    .progress-fill { display:block; width:0%; height:100%; border-radius:inherit; background:linear-gradient(90deg,#76ddc1,#ffd667,#ff786e); transition:width .08s linear; }
+    .treatment.dragging .foot-wrap { transform:scale(1.012); }
     .foot-wrap { position:relative; width:min(92%, 520px); aspect-ratio: 1; transform:none; filter: drop-shadow(18px 18px 16px rgba(3,17,28,.32)); border-radius:20px; overflow:hidden; background: url('assets/ingrown-toe-macro.jpg') center / cover no-repeat; border:1px solid rgba(255,255,255,.23); }
     .foot { display:none; position:absolute; inset:12% 10% 0 7%; background:linear-gradient(150deg,#f8cdb6,#edaa91); border-radius: 48% 48% 44% 35% / 47% 47% 55% 53%; transform:rotate(8deg); }
     .foot:before { content:""; position:absolute; width:49%; height:64%; background:rgba(255,231,213,.56); border-radius:50%; top:22%; left:21%; transform:rotate(10deg); }
@@ -157,6 +165,7 @@
             <div class="nail-curl"></div><div class="bandage"></div>
             <div class="sparkle s1">✦</div><div class="sparkle s2">✦</div><div class="sparkle s3">✦</div>
           </div>
+          <div class="action-hud" id="actionHud"><div class="action-line"><span id="motionIcon">↔</span><span id="motionText">도구를 고른 뒤 화면을 움직여 주세요</span><b><span id="actionPercent">0</span>%</b></div><div class="progress-track"><span class="progress-fill" id="progressFill"></span></div></div>
           <div class="feedback" id="feedback">좋아요!</div>
         </div>
         <div class="step-row">
@@ -188,7 +197,13 @@
         { tool:'ointment', label:'진정 크림', helper:'이제 발끝에 크림을 발라요.', success:'사르르—편안해졌어요.' },
         { tool:'bandage', label:'포근 붕대', helper:'마지막으로 포근하게 감싸주세요.', success:'완벽해요! 발끝이 웃고 있어요.' }
       ];
-      const state = { step:0, score:0, coins:248, started:false, ended:false, time:35, timerId:null, selected:null, sound:true };
+      const motion = {
+        sanitize: { icon:'↔', text:'가로로 문질러 소독하기', threshold:150 },
+        tweezers: { icon:'↓', text:'끝부분에서 아래로 당기기', threshold:120 },
+        ointment: { icon:'↻', text:'원을 그리며 크림 바르기', threshold:230 },
+        bandage: { icon:'↔', text:'길게 끌어 붕대 감기', threshold:180 }
+      };
+      const state = { step:0, score:0, coins:248, started:false, ended:false, time:35, timerId:null, selected:null, sound:true, dragging:false, gestureProgress:0, lastPoint:null, soundLast:0 };
       const $ = s => document.querySelector(s);
       const tools = [...document.querySelectorAll('.tool')];
       const stepEls = [...document.querySelectorAll('.step')];
@@ -200,6 +215,12 @@
       const helperText = $('#helperText');
       const timer = $('#timer');
       const score = $('#score');
+      const actionHud = $('#actionHud');
+      const motionIcon = $('#motionIcon');
+      const motionText = $('#motionText');
+      const actionPercent = $('#actionPercent');
+      const progressFill = $('#progressFill');
+      let audioContext = null;
 
       function showFeedback(message, good=true) {
         feedback.textContent = message;
@@ -209,39 +230,106 @@
         clearTimeout(showFeedback.timeout);
         showFeedback.timeout = setTimeout(() => feedback.classList.remove('show'), 1150);
       }
+      function ensureAudio() {
+        if (!state.sound) return null;
+        const AudioCtor = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtor) return null;
+        if (!audioContext) audioContext = new AudioCtor();
+        if (audioContext.state === 'suspended') audioContext.resume();
+        return audioContext;
+      }
+      function playTone(frequency, duration=.08, type='sine', volume=.04, delay=0) {
+        const ctx = ensureAudio(); if (!ctx) return;
+        const now = ctx.currentTime + delay;
+        const oscillator = ctx.createOscillator(); const gain = ctx.createGain();
+        oscillator.type = type; oscillator.frequency.value = frequency;
+        gain.gain.setValueAtTime(.0001, now); gain.gain.exponentialRampToValueAtTime(volume, now+.012); gain.gain.exponentialRampToValueAtTime(.0001, now+duration);
+        oscillator.connect(gain).connect(ctx.destination); oscillator.start(now); oscillator.stop(now+duration+.025);
+      }
+      function playTexture(duration=.08, cutoff=1200, volume=.035) {
+        const ctx = ensureAudio(); if (!ctx) return;
+        const length = Math.max(1, Math.floor(ctx.sampleRate * duration)); const buffer = ctx.createBuffer(1, length, ctx.sampleRate); const data = buffer.getChannelData(0);
+        for (let i=0; i<length; i++) data[i] = (Math.random()*2-1) * (1-i/length);
+        const source = ctx.createBufferSource(); const filter = ctx.createBiquadFilter(); const gain = ctx.createGain();
+        filter.type='bandpass'; filter.frequency.value=cutoff; filter.Q.value=.7; gain.gain.value=volume; source.buffer=buffer; source.connect(filter).connect(gain).connect(ctx.destination); source.start();
+      }
+      function playActionSound(tool) {
+        if (!state.sound || performance.now()-state.soundLast < 95) return;
+        state.soundLast = performance.now();
+        if (tool === 'sanitize') playTexture(.065, 1800, .026);
+        if (tool === 'tweezers') playTone(1450, .045, 'triangle', .045);
+        if (tool === 'ointment') playTone(180, .07, 'sine', .026);
+        if (tool === 'bandage') playTexture(.09, 520, .03);
+      }
+      function playSuccessSound(tool) {
+        if (!state.sound) return;
+        if (tool === 'sanitize') playTexture(.18, 2200, .045);
+        if (tool === 'tweezers') { playTone(980,.08,'triangle',.07); playTone(1480,.1,'triangle',.05,.07); }
+        if (tool === 'ointment') { playTone(240,.14,'sine',.045); playTone(320,.16,'sine',.035,.08); }
+        if (tool === 'bandage') { playTexture(.22, 700, .045); playTone(520,.12,'sine',.04,.12); }
+      }
       function updateScore() { score.textContent = String(state.score).padStart(3,'0'); $('#coinCount').textContent = state.coins; }
+      function updateGestureProgress() {
+        const current = motion[state.selected]; const percent = current ? Math.min(100, Math.round((state.gestureProgress/current.threshold)*100)) : 0;
+        actionPercent.textContent = percent; progressFill.style.width = `${percent}%`;
+      }
       function renderStep() {
         const current = steps[state.step] || steps[steps.length - 1];
         stepEls.forEach((el, i) => { el.classList.toggle('active', i===state.step); el.classList.toggle('complete', i<state.step); });
         tools.forEach(t => t.classList.toggle('selected', t.dataset.tool === state.selected));
         targetLabel.textContent = state.step === steps.length ? '케어 완료' : (state.started ? current.label : '준비 중');
         targetLabel.classList.toggle('done', state.step===4);
-        helperText.textContent = state.step === steps.length ? '오늘도 한 건 해결!' : (state.started ? current.helper : '진료 시작 버튼을 눌러주세요');
+        helperText.textContent = state.step === steps.length ? '오늘도 한 건 해결!' : (state.started ? (state.selected ? motion[state.selected].text : '먼저 도구를 선택해 주세요') : '진료 시작 버튼을 눌러주세요');
+        const selectedMotion = motion[state.selected];
+        actionHud.classList.toggle('active', state.started);
+        motionIcon.textContent = selectedMotion ? selectedMotion.icon : '✋';
+        motionText.textContent = state.started ? (selectedMotion ? selectedMotion.text : '도구를 고른 뒤 화면을 움직여 주세요') : '진료 시작 버튼을 눌러주세요';
+        updateGestureProgress();
       }
       function reset() {
-        clearInterval(state.timerId); state.step=0; state.score=0; state.started=false; state.ended=false; state.time=35; state.selected=null;
+        clearInterval(state.timerId); state.step=0; state.score=0; state.started=false; state.ended=false; state.time=35; state.selected=null; state.dragging=false; state.gestureProgress=0; state.lastPoint=null;
         timer.textContent=state.time; startButton.textContent='진료 시작하기'; startButton.disabled=false; footWrap.className='foot-wrap'; renderStep(); updateScore();
       }
       function begin() {
-        state.started=true; state.ended=false; state.step=0; state.score=0; state.selected=null; state.time=35; startButton.textContent='케어 진행 중'; startButton.disabled=true; renderStep(); updateScore();
+        ensureAudio(); state.started=true; state.ended=false; state.step=0; state.score=0; state.selected=null; state.time=35; state.gestureProgress=0; startButton.textContent='케어 진행 중'; startButton.disabled=true; renderStep(); updateScore();
         clearInterval(state.timerId); state.timerId = setInterval(() => { state.time--; timer.textContent=state.time; if(state.time<=0) finish(false); },1000);
       }
       function choose(tool) {
         if (!state.started || state.ended) return;
-        state.selected = tool; renderStep();
+        state.selected = tool; state.gestureProgress=0; state.lastPoint=null; renderStep(); playTone(460,.06,'sine',.035);
         const correct = steps[state.step].tool === tool;
-        showFeedback(correct ? '좋은 선택이에요!' : '이 순서의 도구는 아니에요', correct);
+        showFeedback(correct ? motion[tool].text : '이 순서의 도구는 아니에요', correct);
       }
-      function interact() {
+      function completeStep() {
         if (!state.started || state.ended) return;
         const current = steps[state.step];
-        if (state.selected !== current.tool) { showFeedback('먼저 맞는 도구를 골라주세요', false); treatment.animate([{transform:'translateX(-3px)'},{transform:'translateX(3px)'},{transform:'translateX(0)'}],{duration:180}); return; }
+        if (state.selected !== current.tool) { showFeedback('이 순서에 맞는 도구를 골라주세요', false); playTone(150,.12,'sawtooth',.025); return; }
+        state.dragging=false; state.lastPoint=null; treatment.classList.remove('dragging');
         state.score += 250; state.coins += 12; updateScore(); showFeedback(current.success);
+        playSuccessSound(current.tool);
         if (state.step === 0) footWrap.classList.add('cleaned');
         if (state.step === 2) footWrap.classList.add('healed');
         if (state.step === 3) footWrap.classList.add('bandaged');
-        state.step++; state.selected=null; renderStep();
+        state.step++; state.selected=null; state.gestureProgress=0; renderStep();
         if (state.step === 4) setTimeout(() => finish(true), 600);
+      }
+      function startGesture(event) {
+        if (!state.started || state.ended) return;
+        if (!state.selected) { showFeedback('먼저 도구를 선택해 주세요', false); playTone(150,.12,'sawtooth',.025); return; }
+        if (state.selected !== steps[state.step].tool) { showFeedback('지금 단계에는 다른 도구가 필요해요', false); playTone(150,.12,'sawtooth',.025); return; }
+        state.dragging=true; state.lastPoint={x:event.clientX,y:event.clientY}; treatment.classList.add('dragging'); treatment.setPointerCapture?.(event.pointerId); ensureAudio(); playActionSound(state.selected);
+      }
+      function moveGesture(event) {
+        if (!state.dragging || !state.lastPoint) return;
+        const distance=Math.hypot(event.clientX-state.lastPoint.x,event.clientY-state.lastPoint.y);
+        if (distance < .5) return;
+        state.gestureProgress += distance; state.lastPoint={x:event.clientX,y:event.clientY}; updateGestureProgress(); playActionSound(state.selected);
+        if (state.gestureProgress >= motion[state.selected].threshold) completeStep();
+      }
+      function endGesture() {
+        if (!state.dragging) return;
+        state.dragging=false; state.lastPoint=null; treatment.classList.remove('dragging');
+        if (state.gestureProgress < (motion[state.selected]?.threshold || 1)) showFeedback('조금 더 움직여 주세요', false);
       }
       function finish(success) {
         if (state.ended) return; state.ended=true; clearInterval(state.timerId); state.started=false; startButton.disabled=false; startButton.textContent='진료 시작하기';
@@ -249,10 +337,13 @@
         $('#resultEmoji').textContent=success ? '🎉' : '⏰'; $('#resultTitle').textContent=success ? '케어 완료!' : '시간이 다 됐어요'; $('#resultCopy').innerHTML=success ? `토끼 씨의 발끝이 한결 편안해졌어요.<br><b>${state.score}점</b>을 획득했어요.` : '괜찮아요. 도구를 다시 챙겨서<br>천천히 케어해 볼까요?'; $('#resultModal').classList.add('open');
       }
       tools.forEach(t => t.addEventListener('click', () => choose(t.dataset.tool)));
-      treatment.addEventListener('click', interact);
+      treatment.addEventListener('pointerdown', startGesture);
+      treatment.addEventListener('pointermove', moveGesture);
+      treatment.addEventListener('pointerup', endGesture);
+      treatment.addEventListener('pointercancel', endGesture);
       startButton.addEventListener('click', begin);
       $('#againButton').addEventListener('click', () => { $('#resultModal').classList.remove('open'); reset(); begin(); });
-      $('#soundButton').addEventListener('click', e => { state.sound=!state.sound; e.currentTarget.textContent=state.sound?'🔊':'🔇'; showFeedback(state.sound?'소리를 켰어요':'소리를 껐어요'); });
+      $('#soundButton').addEventListener('click', e => { state.sound=!state.sound; e.currentTarget.textContent=state.sound?'🔊':'🔇'; if(state.sound) ensureAudio(); showFeedback(state.sound?'소리를 켰어요':'소리를 껐어요'); });
       document.addEventListener('keydown', e => { const map={1:'sanitize',2:'tweezers',3:'ointment',4:'bandage'}; if(map[e.key]) choose(map[e.key]); if(e.key==='Enter' && !state.started && !state.ended) begin(); });
       reset();
     })();
